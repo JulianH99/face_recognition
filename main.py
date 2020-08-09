@@ -107,7 +107,7 @@ def use_tf():
     model = Sequential()
     
     # Se añaden las capas y sus hiperparámetros
-    model.add(Conv2D(32, (3, 3), padding='same', input_shape=(80, 80, 3), activation='relu'))
+    model.add(Conv2D(32, (3, 3), padding='same', input_shape=(350, 350, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2))) #40x40
     model.add(Dropout(0.25))
     
@@ -127,7 +127,7 @@ def use_tf():
     model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))
     # La capa de salida debe tener el mismo número de clases
-    model.add(Dense(3, activation='softmax'))
+    model.add(Dense(9, activation='softmax'))
     model.summary()
     
     
@@ -135,11 +135,16 @@ def use_tf():
     
     
     callbacks = [
-        EarlyStopping(monitor='val_loss', mode='min', verbose=1,patience=5)
+        EarlyStopping(monitor='val_loss', mode='min', verbose=1,patience=5),
+        ModelCheckpoint(filepath=os.path.join(os.getcwd(), 'model_compiled.h5'), 
+                        monitor='val_loss', 
+                        save_best_only=True, 
+                        verbose=1,
+                        mode='min')
     ]
     
     print(images_generator.n/images_generator.batch_size)
-    model.fit(images_generator, epochs=800,
+    model.fit(images_generator, epochs=32,
               steps_per_epoch=images_generator.n/images_generator.batch_size,
               callbacks=callbacks)
     
