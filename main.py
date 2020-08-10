@@ -134,6 +134,9 @@ def use_tf():
     model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
     
     
+    print(os.path.isfile(os.path.join(os.getcwd(), 'model_compiled.h5')))
+    print("path", os.path.join(os.getcwd(), 'model_compiled.h5'))
+    
     callbacks = [
         EarlyStopping(monitor='val_loss', mode='min', verbose=1,patience=5),
         ModelCheckpoint(filepath=os.path.join(os.getcwd(), 'model_compiled.h5'), 
@@ -144,7 +147,7 @@ def use_tf():
     ]
     
     print(images_generator.n/images_generator.batch_size)
-    model.fit(images_generator, epochs=32,
+    model.fit(images_generator, epochs=1,
               steps_per_epoch=images_generator.n/images_generator.batch_size,
               callbacks=callbacks)
     
