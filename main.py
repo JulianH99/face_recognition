@@ -22,6 +22,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, BatchNormalization
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras import backend as K
 from tensorflow.keras.utils import to_categorical
+import numpy as np
 
 
 
@@ -91,7 +92,7 @@ def use_tf():
     test_path = os.path.join(os.getcwd(), 'test')
     
     images_train = ImageDataGenerator(rescale=1./255)
-    # test_data = ImageDataGenerator(rescale=1./255)
+    test_data = ImageDataGenerator(rescale=1./255)
     
     
     # test_images = load_images(test_path)
@@ -99,7 +100,8 @@ def use_tf():
     
     images_generator = images_train.flow_from_directory(images_train_path,
                                                         target_size=(350, 350))
-    # test_generator = test_data.flow(test_images)
+    test_generator = test_data.flow_from_directory(test_path,
+                                                   target_size=(350, 350))
     
     
     # Design
@@ -134,22 +136,43 @@ def use_tf():
     model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
     
     
-    print(os.path.isfile(os.path.join(os.getcwd(), 'model_compiled.h5')))
-    print("path", os.path.join(os.getcwd(), 'model_compiled.h5'))
+    
+    
+    model_path = os.path.join(os.getcwd(), 'model_compiled.h5' )
     
     callbacks = [
         EarlyStopping(monitor='val_loss', mode='min', verbose=1,patience=5),
-        ModelCheckpoint(filepath=os.path.join(os.getcwd(), 'model_compiled.h5'), 
+        ModelCheckpoint(filepath=model_path, 
                         monitor='val_loss', 
-                        save_best_only=True, 
                         verbose=1,
                         mode='min')
     ]
     
     print(images_generator.n/images_generator.batch_size)
-    model.fit(images_generator, epochs=1,
+    
+    
+    print("Model path", model_path)
+    if not os.path.isfile(model_path):
+        print("Generating model")
+        model.fit(images_generator, epochs=1,
               steps_per_epoch=images_generator.n/images_generator.batch_size,
               callbacks=callbacks)
+        
+    print("Loading model")
+    model_loaded = load_model(model_path)
+    
+    
+    step_size_test=test_generator.n/test_generator.batch_size
+    result_evaluate =  model_loaded.evaluate_generator(test_generator,step_size_test,verbose=1)
+    
+    
+    y_pred_prob =  model_loaded.predict_generator(test_generator, steps= step_size_test)
+    
+    y_pred_classes = np.argmax(y_pred_prob, axis=1)
+    
+    test_labels_one_hot = to_categorical(test_generator.classes)
+    
+    print(y_pred_prob)
     
     
 classify()
